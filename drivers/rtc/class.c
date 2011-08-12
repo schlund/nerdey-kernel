@@ -96,9 +96,7 @@ static int rtc_resume(struct device *dev)
 	/* restore wall clock using delta against this RTC;
 	 * adjust again for avg 1/2 second RTC sampling error
 	 */
-	set_normalized_timespec(&time,
-				newtime + delta.tv_sec,
-				(NSEC_PER_SEC >> 1) + delta.tv_nsec);
+	set_normalized_timespec(&time,newtime,(NSEC_PER_SEC >> 1));
 	do_settimeofday(&time);
 
 	return 0;
