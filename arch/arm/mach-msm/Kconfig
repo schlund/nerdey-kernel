@@ -1025,10 +1025,16 @@ endif
 
 config HTC_ACOUSTIC
         tristate "HTC acoustic driver"
-        default y
+        default n
         help
           The driver provide user space use shared memory allocate by using
           RPC code.
+
+config HTC_ACOUSTIC_WINCE
+        tristate "HTC acoustic driver for WinCE devices"
+        default y
+        help
+          The driver provide user space use shared memory allocate.
 
 config HTC_ACOUSTIC_QSD
 	tristate "HTC acoustic driver for QSD"
