@@ -65,7 +65,7 @@ static int rtc_suspend(struct device *dev, pm_message_t mesg)
 	/* prevent 1/2 sec errors from accumulating */
 	delta_delta = timespec_sub(new_delta, delta);
 	if (delta_delta.tv_sec < -2 || delta_delta.tv_sec >= 2)
-		delta = new_delta;
+		delta = new_delta;	
 	return 0;
 }
 
@@ -75,7 +75,7 @@ static int rtc_resume(struct device *dev)
 	struct rtc_time		tm;
 	time_t			newtime;
 	struct timespec		time;
-
+	
 	if (strcmp(dev_name(&rtc->dev), CONFIG_RTC_HCTOSYS_DEVICE) != 0)
 		return 0;
 
@@ -92,13 +92,16 @@ static int rtc_resume(struct device *dev)
 			pr_debug("%s:  time travel!\n", dev_name(&rtc->dev));
 		return 0;
 	}
-
+ 
 	/* restore wall clock using delta against this RTC;
 	 * adjust again for avg 1/2 second RTC sampling error
 	 */
+	//r0bin: workaround for clock: use only A9 clock
+	//set_normalized_timespec(&time, newtime + delta.tv_sec, (NSEC_PER_SEC >> 1) + delta.tv_nsec);
 	set_normalized_timespec(&time,newtime,(NSEC_PER_SEC >> 1));
-	do_settimeofday(&time);
 
+	do_settimeofday(&time);
+	printk("%s, %d\n",__func__,__LINE__);
 	return 0;
 }
 
