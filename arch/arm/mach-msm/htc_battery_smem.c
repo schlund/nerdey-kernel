@@ -534,6 +534,7 @@ int htc_cable_status_update(const char *sfrom)
 	mutex_unlock(&htc_batt_info.lock);
 	
     htc_battery_set_charging(status);
+	msm_hsusb_set_vbus_state((source==CHARGER_USB) || (source==CHARGER_AC));
 	
 	if (  source == CHARGER_USB || source==CHARGER_AC ) {
 		wake_lock(&vbus_wake_lock);
