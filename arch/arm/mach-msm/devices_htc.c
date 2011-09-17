@@ -254,10 +254,9 @@ static int kgsl_power(bool on)
 
 static void pc_clk_reset(unsigned id)
 {
-	int r;
-	r = msm_proc_comm(PCOM_CLKCTL_RPC_RESET, &id, NULL);
+	int r =	msm_proc_comm(PCOM_CLKCTL_RPC_RESET, &id, NULL);
 //	printk("PCOM_CLKCTL_RPC_ENABLE = %d\n", r);
-	return r;
+//	return r;
 }
 
 
@@ -524,6 +523,34 @@ static void amss_5225_mic_bias_callback(bool on) {
 	  req.data=cpu_to_be32(on);
 	  msm_rpc_call(mic_endpoint, 0x1c, &req, sizeof(req), 5 * HZ);
 }
+//for photon
+void amss_4735_mic_bias_callback(bool on)
+{
+	int ret;
+	int mprog=0x30000061;
+	int mvers=0x10001;
+	
+	struct {
+		struct rpc_request_hdr hdr;
+		uint32_t data;
+	} req;
+
+	if (!mic_endpoint)
+		mic_endpoint = msm_rpc_connect(mprog, mvers, 0);
+	if (!mic_endpoint) {
+		printk("Couldn't open rpc endpoint 0x%x vers 0x%x\n",mprog,mvers);
+		mvers=0x0;
+		mic_endpoint = msm_rpc_connect(mprog, mvers, 0);
+		if (!mic_endpoint) {
+			printk("Couldn't open rpc endpoint 0x%x vers 0x%x\n",mprog,mvers);
+			return;
+		}
+	}
+	req.data=cpu_to_be32(0x1);
+	ret = msm_rpc_call(mic_endpoint, 0x1c, &req, sizeof(req), 5 * HZ);
+	if (ret < 0)
+		printk(KERN_ERR "%s: rpc call failed! (%d)\n", __func__, ret);
+}
 
 static struct htc_acoustic_wce_amss_data amss_5225_acoustic_data = {
 	.volume_table = (MSM_SHARED_RAM_BASE+0xfc300),
@@ -545,14 +572,14 @@ struct htc_acoustic_wce_amss_data amss_6120_acoustic_data = {
 	.mic_bias_callback = amss_5225_mic_bias_callback,
 };
 
-//FIXME: Add right offsets!
+//Table for photon
 struct htc_acoustic_wce_amss_data amss_4735_acoustic_data = {
-	.volume_table = (MSM_SHARED_RAM_BASE+0xfc300),
-	.ce_table = (MSM_SHARED_RAM_BASE+0xfc600),
-	.adie_table = (MSM_SHARED_RAM_BASE+0xfd000),
-	.codec_table = (MSM_SHARED_RAM_BASE+0xfdc00),
-	.mic_offset = (MSM_SHARED_RAM_BASE+0xfed00),
-	.voc_cal_field_size = 10,
+	.volume_table = 0,//0xacc71aa8
+	.ce_table = 0x17b4, //0xacc7325c
+	.adie_table = 0xbb4, //0xacc7265c
+	.codec_table = 0x334, //0xacc71ddc
+	.mic_offset = 0x0,	//not used
+	.voc_cal_field_size = 10,	//not used
 	.mic_bias_callback = amss_4735_mic_bias_callback,
 };
 

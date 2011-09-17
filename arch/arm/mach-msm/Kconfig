@@ -1024,6 +1024,7 @@ config MSM_ADSP_COMP
 endif
 
 config HTC_ACOUSTIC
+		depends on !HTC_ACOUSTIC_WINCE
         tristate "HTC acoustic driver"
         default n
         help

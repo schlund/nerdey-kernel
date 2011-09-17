@@ -32,8 +32,11 @@
 #include <mach/msm_smd.h>
 
 #include <mach/htc_acoustic_wince.h>
+#include <mach/msm_smd.h>
+#include <mach/msm_rpcrouter.h>
 #include <mach/msm_iomap.h>
 #include "proc_comm_wince.h"
+#include "smd_private.h"
 
 #define ACOUSTIC_SHARED_MUTEX_ADDR      (MSM_SHARED_RAM_BASE + 0xfc280)
 #define ACOUSTIC_ARM11_MUTEX_ID         0x11
@@ -92,6 +95,10 @@ enum dex_audio_cmd {
 		__func__, __LINE__, ((to) ? "to" : "from"))
 #define ERR_COPY_FROM_USER() ERR_USER_COPY(0)
 #define ERR_COPY_TO_USER() ERR_USER_COPY(1)
+
+//based on photon wave-dev.dll analysis
+#define HTC_ACOUSTIC_TABLE_SIZE 0x1E1A
+static uint32_t htc_acoustic_vir_addr = 0;
 
 static struct mutex api_lock;
 static struct mutex rpc_connect_mutex;
@@ -352,6 +359,9 @@ static int turn_mic_bias_on_internal(bool on, bool bDualMicEn)
 	D("%s(%d)\n", __func__, on);
 
 	/* enable handset mic */
+/* r0bin: photon doesnt have mic offset, or at least it wasnt found yet. 
+ * uncomment those line is safe, we enable mic with pmic_en below
+ *
 	if ( machine_is_htcrhodium() && bDualMicEn && on ) {
 		memcpy(amss_data->mic_offset, pmSpeakerGain[1], 10);
 	} else {
@@ -366,7 +376,7 @@ static int turn_mic_bias_on_internal(bool on, bool bDualMicEn)
 			ADC3001_powerdown();
 		}
 	}
-
+*/
 	if (amss_data->mic_bias_callback)
 		amss_data->mic_bias_callback(on);
 
@@ -501,39 +511,40 @@ static int htc_acoustic_wince_probe(struct platform_device *pdev)
 	void *ret;
 	struct htc_acoustic_wce_amss_data *pdata = pdev->dev.platform_data;
 
+	printk("%s called\n",__func__);
 	printk("Initialize HTC acoustic driver for wince based devices\n");
 
 	if (!pdata) {
 		E("%s: no platform data\n", __func__);
 		goto err_no_pdata;
 	}
-	ret = pdata->volume_table;
-	if (!ret)
-		goto err_pdata_incomplete;
-	ret = pdata->ce_table;
-	if (!ret)
-		goto err_pdata_incomplete;
-
-	ret = pdata->adie_table;
-	if (!ret)
-		goto err_pdata_incomplete;
-
-	ret = pdata->codec_table;
-	if (!ret)
-		goto err_pdata_incomplete;
-
-	ret = pdata->mic_offset;
-	if (!ret)
-		goto err_pdata_incomplete;
-
+	
+	printk("%s, retrieving the smem address to copy those params\n",__func__);
+	htc_acoustic_vir_addr = (uint32_t)smem_alloc(SMEM_ID_VENDOR1, HTC_ACOUSTIC_TABLE_SIZE);
+	printk("%s, acoustic table smem address=0x%x\n",__func__,htc_acoustic_vir_addr);
+	if(htc_acoustic_vir_addr <= 0)
+		goto err_bad_vaddr;
+	
+	//update smem acoustic address only once
+	if(pdata->volume_table < htc_acoustic_vir_addr)
+	{
+		pdata->volume_table += htc_acoustic_vir_addr;
+		pdata->ce_table += htc_acoustic_vir_addr;
+		pdata->adie_table += htc_acoustic_vir_addr;
+		pdata->codec_table += htc_acoustic_vir_addr;
+		pdata->mic_offset += htc_acoustic_vir_addr;
+	}
+	printk("%s, final addresses: volume=0x%x CE=0x%x ADIE=0x%x codec=0x%x mic=0x%x\n",__func__,
+		pdata->volume_table,pdata->ce_table,pdata->adie_table,pdata->codec_table,pdata->mic_offset);
+	
 	amss_data = pdata;
 	mutex_init(&api_lock);
 	mutex_init(&rpc_connect_mutex);
 
 	return misc_register(&acoustic_wince_misc);
 
-err_pdata_incomplete:
-	E("%s: offsets for some tables undefined in platform data\n", __func__);
+err_bad_vaddr:
+ 	E("%s: error, unable to get acoustic table virtual addr\n", __func__);
 err_no_pdata:
 	return -EINVAL;
 }
@@ -556,6 +567,7 @@ static struct platform_driver htc_acoustic_wince_driver = {
 
 static int __init htc_acoustic_wince_init(void)
 {
+	printk("%s called\n",__func__);
 	return platform_driver_register(&htc_acoustic_wince_driver);
 }
 
