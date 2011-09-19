@@ -83,10 +83,10 @@ enum dex_audio_cmd {
 	DEX_AUDIO_DONE = 0x10,
 };
 
-#define E(fmt, args...) printk(KERN_ERR "htc-acoustic_wince: "fmt, ##args)
+#define E(fmt, args...) printk(KERN_ERR "htc_acoustic_wince: "fmt, ##args)
 
 #if 1
-	#define D(fmt, args...) printk(KERN_INFO "htc-acoustic_wince: "fmt, ##args)
+	#define D(fmt, args...) printk(KERN_INFO "htc_acoustic_wince: "fmt, ##args)
 #else
 	#define D(fmt, args...) do {} while (0)
 #endif
@@ -502,7 +502,7 @@ static struct file_operations acoustic_fops = {
 
 static struct miscdevice acoustic_wince_misc = {
 	.minor = MISC_DYNAMIC_MINOR,
-	.name = "htc-acoustic_wince",
+	.name = "htc_acoustic_wince",
 	.fops = &acoustic_fops,
 };
 
