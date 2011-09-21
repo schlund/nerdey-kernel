@@ -32,6 +32,7 @@
 
 struct htc_acoustic_wce_amss_data {
 	void *volume_table;
+	void *wb_volume_table;
 	void *ce_table;
 	void *adie_table;
 	void *codec_table;

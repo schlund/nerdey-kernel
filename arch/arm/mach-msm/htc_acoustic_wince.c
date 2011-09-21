@@ -150,13 +150,27 @@ static int acoustic_get_capabilities(void __user *arg)
 /* Table update routines */
 static int update_volume_table(void __user *arg)
 {
-	uint16_t table[0xA0];
+	uint16_t table[0x19A];
 
 	if (copy_from_user(&table, arg, sizeof(table))) {
 		ERR_COPY_FROM_USER();
 		return -EFAULT;
 	} else {
 		memcpy(amss_data->volume_table, table, sizeof(table));
+	}
+
+	return 0;
+}
+
+static int update_wb_volume_table(void __user *arg)
+{
+	uint16_t wb_table[0x19A];
+
+	if (copy_from_user(&wb_table, arg, sizeof(wb_table))) {
+		ERR_COPY_FROM_USER();
+		return -EFAULT;
+	} else {
+		memcpy(amss_data->wb_volume_table, wb_table, sizeof(wb_table));
 	}
 
 	return 0;
@@ -460,6 +474,12 @@ static long acoustic_ioctl(struct file *file, unsigned int cmd,
 				task_pid_nr(current), rc);
 			break;
 
+		case ACOUSTIC_UPDATE_WB_VOLUME_TABLE:
+			rc = update_wb_volume_table((void __user *)arg);
+			D("ioctl: ACOUSTIC_UPDATE_WB_VOLUME_TABLE pid=%d result=%d\n",
+				task_pid_nr(current), rc);
+			break;
+
 		case ACOUSTIC_UPDATE_CE_TABLE:
 			rc = update_ce_table((void __user *)arg);
 			D("ioctl: ACOUSTIC_UPDATE_CE_TABLE pid=%d result=%d\n",
@@ -529,13 +549,14 @@ static int htc_acoustic_wince_probe(struct platform_device *pdev)
 	if(pdata->volume_table < htc_acoustic_vir_addr)
 	{
 		pdata->volume_table += htc_acoustic_vir_addr;
+		pdata->wb_volume_table += htc_acoustic_vir_addr;
 		pdata->ce_table += htc_acoustic_vir_addr;
 		pdata->adie_table += htc_acoustic_vir_addr;
 		pdata->codec_table += htc_acoustic_vir_addr;
 		pdata->mic_offset += htc_acoustic_vir_addr;
 	}
-	printk("%s, final addresses: volume=0x%x CE=0x%x ADIE=0x%x codec=0x%x mic=0x%x\n",__func__,
-		pdata->volume_table,pdata->ce_table,pdata->adie_table,pdata->codec_table,pdata->mic_offset);
+	printk("%s, final addresses: volume=0x%x wb_volume=0x%x CE=0x%x ADIE=0x%x codec=0x%x mic=0x%x\n",__func__,
+		pdata->volume_table,pdata->wb_volume_table,pdata->ce_table,pdata->adie_table,pdata->codec_table,pdata->mic_offset);
 	
 	amss_data = pdata;
 	mutex_init(&api_lock);

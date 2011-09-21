@@ -574,7 +574,8 @@ struct htc_acoustic_wce_amss_data amss_6120_acoustic_data = {
 
 //Table for photon
 struct htc_acoustic_wce_amss_data amss_4735_acoustic_data = {
-	.volume_table = 0,//0xacc71aa8
+	.volume_table = 0, //0xacc71aa8
+	.wb_volume_table = 0x19A, //0xACC71C42
 	.ce_table = 0x17b4, //0xacc7325c
 	.adie_table = 0xbb4, //0xacc7265c
 	.codec_table = 0x334, //0xacc71ddc
