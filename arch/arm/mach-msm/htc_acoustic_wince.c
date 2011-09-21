@@ -150,7 +150,7 @@ static int acoustic_get_capabilities(void __user *arg)
 /* Table update routines */
 static int update_volume_table(void __user *arg)
 {
-	uint16_t table[0x19A];
+	uint16_t table[0xA0];
 
 	if (copy_from_user(&table, arg, sizeof(table))) {
 		ERR_COPY_FROM_USER();
@@ -164,7 +164,7 @@ static int update_volume_table(void __user *arg)
 
 static int update_wb_volume_table(void __user *arg)
 {
-	uint16_t wb_table[0x19A];
+	uint16_t wb_table[0xA0];
 
 	if (copy_from_user(&wb_table, arg, sizeof(wb_table))) {
 		ERR_COPY_FROM_USER();
