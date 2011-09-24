@@ -580,7 +580,7 @@ struct htc_acoustic_wce_amss_data amss_4735_acoustic_data = {
 	.adie_table = 0xbb4, //0xacc7265c
 	.codec_table = 0x334, //0xacc71ddc
 	.mic_offset = 0x0,	//not used
-	.voc_cal_field_size = 10,	//not used
+	.voc_cal_field_size = 17, //0x11
 	.mic_bias_callback = amss_4735_mic_bias_callback,
 };
 
